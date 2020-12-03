@@ -10,6 +10,9 @@ class IndexingError(RuntimeError):
     "Exception raised for indexing errors."
     pass
 
+def argsort(seq):
+    return [x for x,y in sorted(enumerate(seq), key = lambda x: (x[1][0], x[1][1]))]
+
 
 def index_to_position(index, strides):
     """
@@ -24,8 +27,11 @@ def index_to_position(index, strides):
         int : position in storage
     """
 
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    # Done TODO: Implement for Task 2.1.
+    storage_position = 0
+    for idx, st in zip(index, strides):
+        storage_position += idx*st
+    return storage_position
 
 
 def count(position, shape, out_index):
@@ -44,8 +50,23 @@ def count(position, shape, out_index):
       None : Fills in `out_index`.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    # Done TODO: Implement for Task 2
+    strides = strides_from_shape(shape)
+    strides_with_shape = []
+    for _, i in enumerate(strides):
+        strides_with_shape.append((i, shape[_]))
+    reverse_stride_idx = argsort(strides_with_shape)[::-1]
+    
+    idx_dict = {}
+
+    for i in reverse_stride_idx:
+        idx = position / strides[i]
+        next_dim_carryover = position % strides[i]
+        position = next_dim_carryover
+        idx_dict[i] = idx
+
+    for i in range(0, len(idx_dict)):
+        out_index[i] = idx_dict[i]
 
 
 def broadcast_index(big_index, big_shape, shape, out_index):
@@ -192,7 +213,14 @@ class TensorData:
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
         # TODO: Implement for Task 2.1.
-        raise NotImplementedError('Need to implement for Task 2.1')
+        new_shape = []
+        new_stride = []
+        for i in order:
+            new_stride.append(self.strides[i])
+            new_shape.append(self.shape[i])
+
+        new_td = TensorData(self._storage, tuple(new_shape), tuple(new_stride))
+        return new_td
 
     def to_string(self):
         s = ""
