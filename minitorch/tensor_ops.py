@@ -30,7 +30,12 @@ def tensor_map(fn):
 
     def _map(out, out_shape, out_strides, in_storage, in_shape, in_strides):
         # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+        size = np.prod(in_shape)
+        for i in range(0, size):
+            idx = np.array(out_shape)
+            count(i, out_shape, idx)
+            out_position = index_to_position(idx, out_strides)
+            out[out_position] = fn(in_storage[i])
 
     return _map
 
@@ -100,7 +105,17 @@ def tensor_zip(fn):
         b_strides,
     ):
         # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+        size = np.prod(a_shape)
+        for a_position in range(0, size):
+            out_idx = np.array(out_shape)
+            count(a_position, out_shape, out_idx)
+            out_position = index_to_position(out_idx, out_strides)
+
+            b_idx = np.array(b_shape)
+            count(a_position, b_shape, b_idx)
+            b_position = index_to_position(b_idx, b_strides)
+
+            out[out_position] = fn(a_storage[a_position], b_storage[b_position])
 
     return _zip
 
@@ -168,7 +183,28 @@ def tensor_reduce(fn):
         reduce_size,
     ):
         # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+        a_size = np.prod(a_shape)
+        a_indices = {}
+        for a_pos in range(0, a_size):
+            a_idx = np.array(a_shape)
+            count(a_pos, a_shape, a_idx)
+            a_indices[a_pos] = a_idx
+
+        out_size = np.prod(out_shape)
+        for out_pos in range(0, out_size):
+            out[out_pos] = 0
+
+        reduced_dims = []
+        for _, dim in enumerate(reduce_shape):
+            if dim != 1:
+                reduced_dims.append(_)
+        
+        for a_pos in range(0, a_size):
+            new_index = a_indices[a_pos]
+            for rd in reduced_dims:
+                new_index[rd] = 0
+            out_position = index_to_position(np.array(new_index), out_strides)
+            out[out_position] += a_storage[a_pos]
 
     return _reduce
 
